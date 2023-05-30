@@ -1,0 +1,169 @@
+from enum import Enum
+import time
+
+CoffeeProgress = Enum('CoffeeProgress', 'queue preparation brewing ready')
+CoffeeBeans = Enum('CoffeeBeans', 'espresso arabica')
+CoffeeMilk = Enum('CoffeeMilk', 'whole skim')
+CoffeeSize = Enum('CoffeeSize', 'small medium large')
+STEP_DELAY = 2
+
+#Obiekt kawa
+class Coffee:
+    def __init__(self, name):
+        self.name = name
+        self.beans = None
+        self.milk = None
+        self.size = None
+
+    def __str__(self):
+        return self.name
+      
+#składniki kawy 
+    def prepare_beans(self, beans):
+        self.beans = beans
+        print(f'Preparing {self.beans.name} beans for your {self}')
+        time.sleep(STEP_DELAY)
+        print(f'Done with {self.beans.name} beans')
+
+    def add_milk(self, milk):
+        self.milk = milk
+        print(f'Adding {self.milk.name} milk to your {self}')
+        time.sleep(STEP_DELAY)
+        print(f'Done with {self.milk.name} milk')
+
+    def set_size(self, size):
+        self.size = size
+        print(f'Setting size to {self.size.name} for your {self}')
+        time.sleep(STEP_DELAY)
+        print(f'Done setting size to {self.size.name}')
+
+class EspressoBuilder:
+    def __init__(self):
+        self.coffee = Coffee('Espresso')
+        self.progress = CoffeeProgress.queue
+
+    def prepare_beans(self):
+        self.progress = CoffeeProgress.preparation
+        self.coffee.prepare_beans(CoffeeBeans.espresso)
+
+    def brew(self):
+        self.progress = CoffeeProgress.brewing
+        print(f'Brewing your {self.coffee}')
+        time.sleep(STEP_DELAY)
+        self.progress = CoffeeProgress.ready
+        print(f'Your {self.coffee} is ready!')
+
+class BlackBuilder:
+    def __init__(self):
+        self.coffee = Coffee('Black Coffee')
+        self.progress = CoffeeProgress.queue
+
+    def prepare_beans(self):
+        self.progress = CoffeeProgress.preparation
+        self.coffee.prepare_beans(CoffeeBeans.arabica)
+
+    def brew(self):
+        self.progress = CoffeeProgress.brewing
+        print(f'Brewing your {self.coffee}')
+        time.sleep(STEP_DELAY)
+        self.progress = CoffeeProgress.ready
+        print(f'Your {self.coffee} is ready!')
+
+class LatteBuilder:
+    def __init__(self):
+        self.coffee = Coffee('Latte')
+        self.progress = CoffeeProgress.queue
+
+    def prepare_beans(self):
+        self.progress = CoffeeProgress.preparation
+        self.coffee.prepare_beans(CoffeeBeans.arabica)
+
+    def add_milk(self):
+        self.progress = CoffeeProgress.preparation
+        self.coffee.add_milk(CoffeeMilk.whole)
+
+    def set_size(self):
+        self.progress = CoffeeProgress.preparation
+        self.coffee.set_size(CoffeeSize.medium)
+
+    def brew(self):
+        self.progress = CoffeeProgress.brewing
+        print(f'Brewing your {self.coffee}')
+        time.sleep(STEP_DELAY)
+        self.progress = CoffeeProgress.ready
+        print(f'Your {self.coffee} is ready!')
+
+class AmericanaBuilder:
+    def __init__(self):
+        self.coffee = Coffee('Americana')
+        self.progress = CoffeeProgress.queue
+
+    def prepare_beans(self):
+        self.progress = CoffeeProgress.preparation
+        self.coffee.prepare_beans(CoffeeBeans.arabica)
+
+    def brew(self):
+        self.progress = CoffeeProgress.brewing
+        print(f'Brewing your {self.coffee}')
+        time.sleep(STEP_DELAY)
+        self.progress = CoffeeProgress.ready
+        print(f'Your {self.coffee} is ready!')
+
+class Barista:
+    def __init__(self):
+        self.builder = None
+
+    def construct_coffee(self, builder):
+        self.builder = builder
+        steps = [builder.prepare_beans]
+        if isinstance(builder, LatteBuilder):
+            steps.extend([builder.add_milk, builder.set_size])
+        steps.append(builder.brew)
+        [step() for step in steps]
+
+    @property
+    def coffee(self):
+        return self.builder.coffee
+      
+#sprawdzam wybor
+def validate_choice(builders):
+    valid_input = False
+    builder = None
+    while not valid_input:
+        input_msg = 'What type of coffee would you like? [e]spresso, [b]lack coffee, [l]atte, [a]mericana: '
+        coffee_choice = input(input_msg)
+        try:
+            builder = builders[coffee_choice]()
+            valid_input = True
+        except KeyError:
+            error_msg = 'Sorry, only espresso (e), black coffee (b), latte (l), and americana (a) are available.'
+            print(error_msg)
+    return builder
+
+def main():
+    builders = {
+        'e': EspressoBuilder,
+        'b': BlackBuilder,
+        'l': LatteBuilder,
+        'a': AmericanaBuilder
+    }
+
+  #Czy rurka jest w mleku?
+    valid_input = False
+    while not valid_input:
+        builder = validate_choice(builders)
+        print("\n")
+        if isinstance(builder, LatteBuilder):
+            milk_in_container = input("Is the milk tube in the container? (y/n): ")
+            while milk_in_container.lower() != 'y':
+                print("Please insert the milk tube into the container.")
+                milk_in_container = input("Is the milk tube in the container now? (y/n): ")
+        barista = Barista()
+        barista.construct_coffee(builder)
+        coffee = barista.coffee
+
+        print("\n")
+        print(f'Enjoy your {coffee}!')
+
+if __name__ == '__main__':
+    main()
